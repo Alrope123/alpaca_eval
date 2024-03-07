@@ -253,9 +253,10 @@ def _openai_completion_helper(
         except openai.OpenAIError as e:
             logging.warning(f"OpenAIError: {e}.")
             if "Please reduce" in str(e):
-                kwargs["max_tokens"] = int(kwargs["max_tokens"] * 0.8)
-                logging.warning(f"Reducing target length to {kwargs['max_tokens']}, Retrying...")
-                if kwargs["max_tokens"] == 0:
+                logging.warning(f"Prompt + target too long. Prompt: {prompt_batch[0]}")
+                curr_kwargs["max_tokens"] = int(curr_kwargs["max_tokens"] * 0.8)
+                logging.warning(f"Reducing target length to {curr_kwargs['max_tokens']}, Retrying...")
+                if curr_kwargs["max_tokens"] == 0:
                     logging.exception("Prompt is already longer than max context length. Error:")
                     raise e
             elif "Please try again with a different prompt." in str(e):
