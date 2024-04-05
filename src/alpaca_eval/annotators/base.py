@@ -674,6 +674,8 @@ class SingleAnnotator:
         if not df_to_annotate.empty:
             # prompts and completions here will not be the same length as the dataframe due to batching
             prompts, df_to_annotate = self._make_prompts(df_to_annotate)
+            logging.info(prompts[0])
+            assert False
             completions = self.fn_completions(prompts=prompts, **self.completions_kwargs, **decoding_kwargs)
 
             for k, v in completions.items():
