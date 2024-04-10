@@ -33,6 +33,7 @@ __all__ = [
     "eval_parser",
     "logprob_parser",
     "pipeline_meta_parser",
+    "match_parser",
 ]
 
 
@@ -231,6 +232,36 @@ def replace_parser(completion: str, replacer: dict, default_replacer: Any = "aut
         raise ValueError("The completion is empty.")
 
     return [replacer.get(completion, completion if default_replacer == "auto" else default_replacer)]
+
+
+def match_parser(completion: str, matcher: dict) -> list[Any]:
+    """Parser that replaces part of the completion using a dictionary. This is useful if it's more natural for a
+    prompt to ask a completion that is different from the one you want to store.
+
+    Parameters
+    ----------
+    completion : str
+        Output from the model to parse.
+
+    replacer : dict
+        Dictionary with keys that are the substring of the completion that you want to replace and values that are the
+        replacements.
+
+    default_replacer : any, optional
+        If a key is not found in `replacer`, use this value instead. If "auto" then use the key itself.
+
+    Examples
+    --------
+    >>> replace_parser("True", replacer={"True": 1})
+    [1]
+    """
+    if completion == "":
+        raise ValueError("The completion is empty.")
+
+    if completion not in matcher:
+        logging.warning(f"The completion is not in the provided options: {completion}")
+
+    return [matcher.get(completion, completion)]
 
 
 def logprob_parser(
