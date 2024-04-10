@@ -156,6 +156,7 @@ class PairwiseAnnotatorLocal(BaseAnnotator):
         self,
         outputs_1: Union[Sequence[dict[str, Any]], pd.DataFrame],
         outputs_2: Union[Sequence[dict[str, Any]], pd.DataFrame],
+        outputs_3: Union[Sequence[dict[str, Any]], pd.DataFrame] = None,
         keys_to_merge: Optional[Sequence[str]] = None,
         is_ordered: bool = False,
         **decoding_kwargs,
@@ -198,12 +199,18 @@ class PairwiseAnnotatorLocal(BaseAnnotator):
 
         outputs_1 = utils.convert_to_dataframe(outputs_1)
         outputs_2 = utils.convert_to_dataframe(outputs_2)
+        if outputs_3 is not None:
+            outputs_3 = utils.convert_to_dataframe(outputs_3)
 
         if is_ordered:
             outputs_1 = outputs_1.copy()
             outputs_2 = outputs_2.copy()
+            if outputs_3 is not None:
+                outputs_3 = outputs_3.copy()
             outputs_1["tmp_idx"] = range(len(outputs_1))
             outputs_2["tmp_idx"] = range(len(outputs_1))
+            if outputs_3 is not None:
+                outputs_3["tmp_idx"] = range(len(outputs_1))
             keys_to_merge += ["tmp_idx"]  # add a temporary index to merge on
 
         # find all the columns that are in both
@@ -220,6 +227,26 @@ class PairwiseAnnotatorLocal(BaseAnnotator):
             # if the columns are the same, we can drop the _2
             if df_to_annotate[c + "_1"].equals(df_to_annotate[c + "_2"]):
                 df_to_annotate = df_to_annotate.drop(columns=c + "_2").rename(columns={c + "_1": c})
+
+        if outputs_3 is not None:
+        # merge df_to_annotate with human annotation
+            other_same_cols = [k for k in df_to_annotate.columns if k in outputs_3 and k not in (keys_to_merge + ["output_1", "output_2"])]
+
+            df_to_annotate = pd.merge(
+                df_to_annotate,
+                outputs_3,
+                on=keys_to_merge,
+                suffixes=("_x", "_human"),
+            )
+
+            for c in other_same_cols:
+                # if the columns are the same, we can drop the _2
+                if df_to_annotate[c + "_x"].equals(df_to_annotate[c + "_human"]):
+                    df_to_annotate = df_to_annotate.drop(columns=c + "_human").rename(columns={c + "_x": c})
+            
+            for c in ["output_1", "output_2"]:
+                df_to_annotate = df_to_annotate.rename(columns={c + "_x": c})
+
 
         if is_ordered:
             df_to_annotate = df_to_annotate.drop(columns="tmp_idx")

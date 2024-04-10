@@ -17,6 +17,7 @@ __all__ = ["evaluate", "evaluate_from_model", "analyze_evaluators", "make_leader
 def evaluate(
     model_outputs: Optional[AnyLoadableDF] = None,
     reference_outputs: AnyLoadableDF = constants.ALPACAEVAL_REFERENCE_OUTPUTS,
+    human_outputs: Optional[AnyLoadableDF] = None,
     annotators_config: AnyPath = constants.DEFAULT_ANNOTATOR_CONFIG,
     name: Optional[str] = None,
     output_path: Optional[Union[AnyPath, str]] = "auto",
@@ -121,28 +122,34 @@ def evaluate(
     if model_outputs is not None:
         model_outputs = utils.load_or_convert_to_dataframe(model_outputs)
         reference_outputs = utils.load_or_convert_to_dataframe(reference_outputs)
+        if human_outputs is not None:
+            human_outputs = utils.load_or_convert_to_dataframe(human_outputs)
         name = utils.get_generator_name(name, model_outputs)
 
         if (name not in leaderboard) or is_overwrite_leaderboard:
             logging.info(f"Evaluating the {name} outputs.")
 
             if max_instances is not None:
-                # first we shuffle both outputs with a fix seed => more representative
-                if len(model_outputs) != len(reference_outputs):
+                # first we shuffle three outputs with a fix seed => more representative
+                if len(model_outputs) != len(reference_outputs) or len(model_outputs) != len(human_outputs):
                     logging.warning(
-                        "model_outputs and reference_outputs have different lengths, so we cannot shuffle before taking the first max_instances."
+                        "model_outputs and reference_outputs and human_outputs have different lengths, so we cannot shuffle before taking the first max_instances."
                     )
                 else:
                     seed = 123
                     model_outputs = model_outputs.sample(frac=1, random_state=seed)
                     reference_outputs = reference_outputs.sample(frac=1, random_state=seed)
+                    if human_outputs is not None:
+                        human_outputs = human_outputs.sample(frac=1, random_state=seed)
 
                 model_outputs = model_outputs[:max_instances]
                 reference_outputs = reference_outputs[:max_instances]
+                if human_outputs is not None:
+                    human_outputs = human_outputs[:max_instances]
 
             annotator = Annotator(annotators_config=annotators_config, **annotator_kwargs)
             annotations = annotator.annotate_head2head(
-                outputs_1=reference_outputs, outputs_2=model_outputs, **annotation_kwargs
+                outputs_1=reference_outputs, outputs_2=model_outputs, output3_3=human_outputs, **annotation_kwargs
             )
 
             if isinstance(fn_metric, str):
