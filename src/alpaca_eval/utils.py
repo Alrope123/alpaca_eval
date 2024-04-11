@@ -503,7 +503,8 @@ def dataframe_chunk_generator(df: pd.DataFrame, chunksize: Optional[int] = None,
 
 def validate_alpacaeval_preference(x: float, is_allow_nan: bool = True) -> bool:
     """Validate the preference annotation."""
-    assert 1<= x <= 2, (type(x), x)
+    if not 1<= x <= 2:
+        logging.warning([type(x), x])
     return (1 <= x <= 2) or (is_allow_nan and np.isnan(x))
 
 
