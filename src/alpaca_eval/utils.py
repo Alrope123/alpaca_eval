@@ -507,6 +507,12 @@ def validate_alpacaeval_preference(x: float, is_allow_nan: bool = True) -> bool:
         logging.warning([type(x), x])
     return (1 <= x <= 2) or (is_allow_nan and np.isnan(x))
 
+def validate_humanif_preference(x: float, is_allow_nan: bool = True) -> bool:
+    """Validate the preference annotation."""
+    if x not in [1.0, 2.0, 0.0]:
+        logging.warning([type(x), x])
+    return x in [1.0, 2.0, 0.0] or (is_allow_nan and np.isnan(x))
+
 
 def get_all_clients(
     client_config_path: AnyPath,

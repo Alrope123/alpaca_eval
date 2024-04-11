@@ -784,6 +784,7 @@ class SingleAnnotator:
             all_annotations += batch_annotations
 
             all_completions += [completion] * self.batch_size
+            logging.info(f"All Annotations: {all_annotations}")
         return all_annotations, all_completions
 
     def _postprocess(self, df_annotated: pd.DataFrame) -> pd.DataFrame:
@@ -798,6 +799,7 @@ class SingleAnnotator:
             df_annotated = df_annotated[~arr_is_na]
 
         for processor in self.processors[::-1]:  # postprocess in reverted order => no interactions between processors
+            logging.info(f"before processer {processor} annotations: {df_annotated[self.annotation_column]}")
             df_annotated = processor.postprocess(df_annotated)
 
         return df_annotated
