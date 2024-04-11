@@ -247,7 +247,7 @@ class PairwiseAnnotatorLocal(BaseAnnotator):
             logging.info("Columns after second merge")
             logging.info(df_to_annotate.columns)
 
-            for c in df_to_annotate.columns:
+            for c in outputs_3.columns:
                 if c not in (keys_to_merge + distinct_columns):
                     # if the columns are the same, we can drop the _y
                     if df_to_annotate[c + "_x"].equals(df_to_annotate[c + "_y"]):
