@@ -149,7 +149,7 @@ def evaluate(
 
             annotator = Annotator(annotators_config=annotators_config, **annotator_kwargs)
             annotations = annotator.annotate_head2head(
-                outputs_1=reference_outputs, outputs_2=model_outputs, output3_3=human_outputs, **annotation_kwargs
+                outputs_1=reference_outputs, outputs_2=model_outputs, outputs_3=human_outputs, **annotation_kwargs
             )
 
             if isinstance(fn_metric, str):
