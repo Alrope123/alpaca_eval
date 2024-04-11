@@ -229,7 +229,12 @@ class PairwiseAnnotatorLocal(BaseAnnotator):
                 df_to_annotate = df_to_annotate.drop(columns=c + "_2").rename(columns={c + "_1": c})
 
         if outputs_3 is not None:
-        # merge df_to_annotate with human annotation
+            logging.info("Columns")
+            logging.info(df_to_annotate.columns)
+            logging.info(outputs_3.columns)
+            logging.info(keys_to_merge)
+
+            # merge df_to_annotate with human annotation
             other_same_cols = [k for k in df_to_annotate.columns if k in outputs_3 and k not in (keys_to_merge + ["output_1", "output_2"])]
 
             df_to_annotate = pd.merge(
