@@ -406,11 +406,9 @@ class SinglePairwiseAnnotator(SingleAnnotator):
         self.random_seed_column = list(random_seed_column)
 
     def _postprocess(self, df_annotated: pd.DataFrame) -> pd.DataFrame:
-        logging.info(f"right before base post process annotations: {df_annotated[self.annotation_column]}")
         df_annotated = super()._postprocess(df_annotated)
 
         all_values = df_annotated[self.annotation_column]
-        logging.info(f"after base post process annotations: {all_values}")
         all_values = all_values[~all_values.isna()]
         assert all_values.apply(utils.validate_humanif_preference, is_allow_nan=True).all()
 
