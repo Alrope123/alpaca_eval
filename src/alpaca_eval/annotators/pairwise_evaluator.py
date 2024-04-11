@@ -235,28 +235,30 @@ class PairwiseAnnotatorLocal(BaseAnnotator):
             logging.info(keys_to_merge)
 
             # merge df_to_annotate with human annotation
-            other_same_cols = [k for k in df_to_annotate.columns if k in outputs_3 and k not in (keys_to_merge + ["output_1", "output_2", "output"])]
+            distinct_columns = [k for k in outputs_3 if k + "_1" in df_to_annotate.columns]
 
             df_to_annotate = pd.merge(
                 df_to_annotate,
                 outputs_3,
                 on=keys_to_merge,
-                suffixes=("_x", "_human"),
+                suffixes=("_x", "_y"),
             )
 
             logging.info("Columns after second merge")
             logging.info(df_to_annotate.columns)
 
-            for c in other_same_cols:
-                # if the columns are the same, we can drop the _2
-                if df_to_annotate[c + "_x"].equals(df_to_annotate[c + "_human"]):
-                    df_to_annotate = df_to_annotate.drop(columns=c + "_human").rename(columns={c + "_x": c})
-            
+            for c in df_to_annotate.columns:
+                if c not in distinct_columns:
+                    # if the columns are the same, we can drop the _y
+                    if df_to_annotate[c + "_x"].equals(df_to_annotate[c + "_y"]):
+                        df_to_annotate = df_to_annotate.drop(columns=c + "_y").rename(columns={c + "_x": c})
+                
             logging.info("Columns after dropping")
             logging.info(df_to_annotate.columns)
 
-            for c in ["output_1", "output_2"]:
-                df_to_annotate = df_to_annotate.rename(columns={c + "_x": c})
+            for c in df_to_annotate.columns:
+                # if the columns are the same, we can drop the _y
+                df_to_annotate = df_to_annotate.rename(columns={c: c + "_human"})
             logging.info(df_to_annotate.columns)
 
         if is_ordered:
@@ -416,6 +418,6 @@ class SinglePairwiseAnnotator(SingleAnnotator):
 
         all_values = df_annotated[self.annotation_column]
         all_values = all_values[~all_values.isna()]
-        assert all_values.apply(utils.validate_humanif_preference, is_allow_nan=True).all()
+        assert all_values.apply(utils.validate_yif_preference, is_allow_nan=True).all()
 
         return df_annotated
