@@ -389,7 +389,7 @@ class SinglePairwiseAnnotator(SingleAnnotator):
                 if df.empty or self.annotation_column not in df.columns:
                     return df
                 df = df.copy()
-                df[self.annotation_column] = df[self.annotation_column].apply(lambda x: 3 - x)
+                df[self.annotation_column] = df[self.annotation_column].apply(lambda x: (3 - x) % 3)
                 return df
 
             # swith output columns by default

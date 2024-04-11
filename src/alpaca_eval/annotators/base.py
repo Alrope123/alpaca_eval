@@ -784,7 +784,7 @@ class SingleAnnotator:
             all_annotations += batch_annotations
 
             all_completions += [completion] * self.batch_size
-            logging.info(f"All Annotations: {all_annotations}")
+        logging.info(f"All Annotations: {all_annotations}")
         return all_annotations, all_completions
 
     def _postprocess(self, df_annotated: pd.DataFrame) -> pd.DataFrame:
