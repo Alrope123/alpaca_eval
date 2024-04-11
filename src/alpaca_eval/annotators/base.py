@@ -676,7 +676,7 @@ class SingleAnnotator:
             prompts, df_to_annotate = self._make_prompts(df_to_annotate)
             logging.info("Example of a prompt:")
             logging.info(prompts[0])
-            assert False
+            # assert False
             completions = self.fn_completions(prompts=prompts, **self.completions_kwargs, **decoding_kwargs)
 
             for k, v in completions.items():
