@@ -249,9 +249,12 @@ class PairwiseAnnotatorLocal(BaseAnnotator):
                 if df_to_annotate[c + "_x"].equals(df_to_annotate[c + "_human"]):
                     df_to_annotate = df_to_annotate.drop(columns=c + "_human").rename(columns={c + "_x": c})
             
+            logging.info("Columns after second merge")
+            logging.info(df_to_annotate.columns)
+
             for c in ["output_1", "output_2"]:
                 df_to_annotate = df_to_annotate.rename(columns={c + "_x": c})
-
+            logging.info(df_to_annotate.columns)
 
         if is_ordered:
             df_to_annotate = df_to_annotate.drop(columns="tmp_idx")
@@ -265,7 +268,7 @@ class PairwiseAnnotatorLocal(BaseAnnotator):
                     f"{len(outputs_1)}, len(outputs_2)=={len(outputs_2)}, and len(df_annotated)=={len(df_to_annotate)}."
                     f" This means that there are missing examples or duplicates. We are taking a SQL inner join."
                 )
-
+        logging.info(df_to_annotate.columns)
         out = self.__call__(df_to_annotate, **decoding_kwargs)
 
         return out

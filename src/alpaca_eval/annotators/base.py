@@ -672,6 +672,8 @@ class SingleAnnotator:
             df_to_annotate = df_to_annotate[idx_not_completed].copy()
 
         if not df_to_annotate.empty:
+            logging.info("Column names right before making the prompts:")
+            logging.info(df_to_annotate.columns)
             # prompts and completions here will not be the same length as the dataframe due to batching
             prompts, df_to_annotate = self._make_prompts(df_to_annotate)
             logging.info("Example of a prompt:")
