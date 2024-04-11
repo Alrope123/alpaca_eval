@@ -248,7 +248,7 @@ class PairwiseAnnotatorLocal(BaseAnnotator):
             logging.info(df_to_annotate.columns)
 
             for c in df_to_annotate.columns:
-                if c not in distinct_columns:
+                if c not in (keys_to_merge + distinct_columns):
                     # if the columns are the same, we can drop the _y
                     if df_to_annotate[c + "_x"].equals(df_to_annotate[c + "_y"]):
                         df_to_annotate = df_to_annotate.drop(columns=c + "_y").rename(columns={c + "_x": c})
@@ -256,7 +256,7 @@ class PairwiseAnnotatorLocal(BaseAnnotator):
             logging.info("Columns after dropping")
             logging.info(df_to_annotate.columns)
 
-            for c in df_to_annotate.columns:
+            for c in distinct_columns:
                 # if the columns are the same, we can drop the _y
                 df_to_annotate = df_to_annotate.rename(columns={c: c + "_human"})
             logging.info(df_to_annotate.columns)
