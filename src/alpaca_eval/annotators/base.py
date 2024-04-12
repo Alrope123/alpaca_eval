@@ -188,8 +188,6 @@ class BaseAnnotator(abc.ABC):
         for c in self.primary_keys:
             df_to_annotate[c] = df_to_annotate[c].astype(str)
 
-        logging.info("Inside base call method:")
-        logging.info(df_to_annotate.columns)
         
 
         all_annotated = []
@@ -666,8 +664,6 @@ class SingleAnnotator:
             df_to_annotate[self.annotation_column] = []
             return df_to_annotate
 
-        logging.info("Column names before preprocessing:")
-        logging.info(df_to_annotate.columns)
         df_to_annotate = self._preprocess(df_to_annotate)
 
         # the following only reapplies the parsing in case you already stored the raw completions. requires batch_size=1
@@ -678,12 +674,8 @@ class SingleAnnotator:
             df_to_annotate = df_to_annotate[idx_not_completed].copy()
 
         if not df_to_annotate.empty:
-            logging.info("Column names right before making the prompts:")
-            logging.info(df_to_annotate.columns)
             # prompts and completions here will not be the same length as the dataframe due to batching
             prompts, df_to_annotate = self._make_prompts(df_to_annotate)
-            logging.info("Example of a prompt:")
-            logging.info(prompts[0])
             # assert False
             completions = self.fn_completions(prompts=prompts, **self.completions_kwargs, **decoding_kwargs)
 

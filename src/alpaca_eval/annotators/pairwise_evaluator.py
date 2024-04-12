@@ -48,8 +48,6 @@ class PairwiseAnnotatorLocal(BaseAnnotator):
     ):
         self.input_keys = list(input_keys)
         self.output_keys = list(output_keys)
-        logging.info("Output keys: ")
-        logging.info(self.output_keys)
         super().__init__(*args, **kwargs, primary_keys=self.input_keys + self.output_keys)
         self.p_label_flip = p_label_flip
 
@@ -231,11 +229,6 @@ class PairwiseAnnotatorLocal(BaseAnnotator):
                 df_to_annotate = df_to_annotate.drop(columns=c + "_2").rename(columns={c + "_1": c})
 
         if outputs_3 is not None:
-            logging.info("Columns")
-            logging.info(df_to_annotate.columns)
-            logging.info(outputs_3.columns)
-            logging.info(keys_to_merge)
-
             # merge df_to_annotate with human annotation
             distinct_columns = [k for k in outputs_3 if k + "_1" in df_to_annotate.columns]
 
@@ -246,22 +239,16 @@ class PairwiseAnnotatorLocal(BaseAnnotator):
                 suffixes=("_x", "_y"),
             )
 
-            logging.info("Columns after second merge")
-            logging.info(df_to_annotate.columns)
-
             for c in outputs_3.columns:
                 if c not in (keys_to_merge + distinct_columns):
                     # if the columns are the same, we can drop the _y
                     if df_to_annotate[c + "_x"].equals(df_to_annotate[c + "_y"]):
                         df_to_annotate = df_to_annotate.drop(columns=c + "_y").rename(columns={c + "_x": c})
-                
-            logging.info("Columns after dropping")
-            logging.info(df_to_annotate.columns)
 
             for c in distinct_columns:
                 # if the columns are the same, we can drop the _y
                 df_to_annotate = df_to_annotate.rename(columns={c: c + "_human"})
-            logging.info(df_to_annotate.columns)
+
 
         if is_ordered:
             df_to_annotate = df_to_annotate.drop(columns="tmp_idx")
@@ -275,7 +262,6 @@ class PairwiseAnnotatorLocal(BaseAnnotator):
                     f"{len(outputs_1)}, len(outputs_2)=={len(outputs_2)}, and len(df_annotated)=={len(df_to_annotate)}."
                     f" This means that there are missing examples or duplicates. We are taking a SQL inner join."
                 )
-        logging.info(df_to_annotate.columns)
         out = self.__call__(df_to_annotate, **decoding_kwargs)
 
         return out

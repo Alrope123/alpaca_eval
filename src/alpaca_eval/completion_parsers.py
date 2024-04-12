@@ -261,8 +261,6 @@ def match_parser(completion: str, matcher: dict) -> list[Any]:
     if completion not in matcher:
         logging.warning(f"The completion is not in the provided options: {completion}")
 
-    logging.info(f"Parsed: {matcher.get(completion, completion)}")
-
     return [matcher.get(completion, completion)]
 
 
