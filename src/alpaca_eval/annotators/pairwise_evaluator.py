@@ -48,6 +48,8 @@ class PairwiseAnnotatorLocal(BaseAnnotator):
     ):
         self.input_keys = list(input_keys)
         self.output_keys = list(output_keys)
+        logging.info("Output keys: ")
+        logging.info(self.output_keys)
         super().__init__(*args, **kwargs, primary_keys=self.input_keys + self.output_keys)
         self.p_label_flip = p_label_flip
 

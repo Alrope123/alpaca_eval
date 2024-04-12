@@ -188,6 +188,10 @@ class BaseAnnotator(abc.ABC):
         for c in self.primary_keys:
             df_to_annotate[c] = df_to_annotate[c].astype(str)
 
+        logging.info("Inside base call method:")
+        logging.info(df_to_annotate.columns)
+        
+
         all_annotated = []
         for df_chunk in utils.dataframe_chunk_generator(df_to_annotate, chunksize, tqdm_desc="Annotation chunk"):
             curr_df_to_annotate = self._preprocess(df_chunk)
@@ -662,6 +666,8 @@ class SingleAnnotator:
             df_to_annotate[self.annotation_column] = []
             return df_to_annotate
 
+        logging.info("Column names before preprocessing:")
+        logging.info(df_to_annotate.columns)
         df_to_annotate = self._preprocess(df_to_annotate)
 
         # the following only reapplies the parsing in case you already stored the raw completions. requires batch_size=1
