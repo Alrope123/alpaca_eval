@@ -258,6 +258,11 @@ def match_parser(completion: str, matcher: dict) -> list[Any]:
     if completion == "":
         raise ValueError("The completion is empty.")
 
+    if completion in ["Tie", "TIE"]:
+        completion = completion.lower()  
+    elif completion in ["a", "b"]:
+        completion = completion.upper()
+
     if completion not in matcher:
         logging.warning(f"The completion is not in the provided options: {completion}")
 
