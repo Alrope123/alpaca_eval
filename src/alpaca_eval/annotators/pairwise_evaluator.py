@@ -404,8 +404,14 @@ class SinglePairwiseAnnotator(SingleAnnotator):
     def _postprocess(self, df_annotated: pd.DataFrame) -> pd.DataFrame:
         df_annotated = super()._postprocess(df_annotated)
 
-        all_values = df_annotated[self.annotation_column]
-        all_values = all_values[~all_values.isna()]
-        assert all_values.apply(utils.validate_humanif_preference, is_allow_nan=True).all()
+        # HumanIF: iteratively multi-turn prompting
+        # all_values = df_annotated[self.annotation_column]
+        # all_values = all_values[~all_values.isna()]
+        # assert all_values.apply(utils.validate_humanif_preference, is_allow_nan=True).all()
+        annotation_columns = [c for c in df_annotated.columns if c.startswith(self.annotation_column)]
+        for annotation_column in annotation_columns:
+            all_values = df_annotated[annotation_column]
+            all_values = all_values[~all_values.isna()]
+            assert all_values.apply(utils.validate_humanif_preference, is_allow_nan=True).all()
 
         return df_annotated

@@ -252,7 +252,10 @@ class BaseAnnotator(abc.ABC):
         self._add_missing_primary_keys_(df_to_annotate)
 
         # don't remove output keys to keep
-        for c in self.other_output_keys_to_keep + [self.annotation_key]:
+        # HumanIF: 
+        # for c in self.other_output_keys_to_keep + [self.annotation_key]:
+        annotation_keys = [k for k in df_to_annotate.columns if k.startswith(self.annotation_key)]
+        for c in self.other_output_keys_to_keep + annotation_keys:
             if c in df_to_annotate.columns:
                 logging.warning(f"{c} column is already in the dataframe. We will overwrite it.")
                 df_to_annotate[c] = None
@@ -282,8 +285,12 @@ class BaseAnnotator(abc.ABC):
         for annotator in self.annotators.keys():
             # only annotate examples that have not been annotated yet
             curr_idcs = df_to_annotate[self.annotator_column] == annotator
-            if self.annotation_key in df_to_annotate.columns:
-                curr_idcs &= df_to_annotate[self.annotation_key].isna()
+            # HumanIF: 
+            # if self.annotation_key in df_to_annotate.columns:
+            #     curr_idcs &= df_to_annotate[self.annotation_key].isna()
+            annotation_keys = [c for c in df_to_annotate.columns if c.startswith(self.annotation_key)]
+            for annotation_key in annotations_keys:
+                urr_idcs &= df_to_annotate[annotation_key].isna()
 
             # drop the output keys that you will be adding
             for k in self.other_output_keys_to_keep:
@@ -325,27 +332,51 @@ class BaseAnnotator(abc.ABC):
         df_to_annotate = utils.convert_to_dataframe(to_annotate)
         self._add_missing_primary_keys_(df_to_annotate)
 
-        # select available annotations
-        if self.is_store_missing_annotations:
-            df_annotated[self.annotation_key] = df_annotated[self.annotation_key].fillna(self.TMP_MISSING_ANNOTATION)
-        else:
-            df_annotated[self.annotation_key] = df_annotated[self.annotation_key].replace(
-                self.TMP_MISSING_ANNOTATION, None
-            )
+        # HumanIF: 
+        # # select available annotations
+        # if self.is_store_missing_annotations:
+        #     df_annotated[self.annotation_key] = df_annotated[self.annotation_key].fillna(self.TMP_MISSING_ANNOTATION)
+        # else:
+        #     df_annotated[self.annotation_key] = df_annotated[self.annotation_key].replace(
+        #         self.TMP_MISSING_ANNOTATION, None
+        #     )
 
-        df_annotated = df_annotated[~df_annotated[self.annotation_key].isna()].copy()
+        # df_annotated = df_annotated[~df_annotated[self.annotation_key].isna()].copy()
 
-        # try converting to int now that no nan. Note this will only do so if possible
-        df_annotated[self.annotation_key] = df_annotated[self.annotation_key].astype(self.annotation_type)
+        # # try converting to int now that no nan. Note this will only do so if possible
+        # df_annotated[self.annotation_key] = df_annotated[self.annotation_key].astype(self.annotation_type)
 
-        df_annotated = self._filter_annotations_before_storing(df_annotated)
-        self._store_annotations_(df_annotated)
+        # df_annotated = self._filter_annotations_before_storing(df_annotated)
+        # self._store_annotations_(df_annotated)
 
-        if self.is_store_missing_annotations:
-            # put back None
-            df_annotated[self.annotation_key] = df_annotated[self.annotation_key].replace(
-                self.TMP_MISSING_ANNOTATION, None
-            )
+        # if self.is_store_missing_annotations:
+        #     # put back None
+        #     df_annotated[self.annotation_key] = df_annotated[self.annotation_key].replace(
+        #         self.TMP_MISSING_ANNOTATION, None
+        #     )
+        annotation_keys = [c for c in df_to_annotate.columns if k.startswith(self.annotation_key)]
+        for annotation_key in annotation_keys:
+            # select available annotations
+            if self.is_store_missing_annotations:
+                df_annotated[annotation_key] = df_annotated[annotation_key].fillna(self.TMP_MISSING_ANNOTATION)
+            else:
+                df_annotated[annotation_key] = df_annotated[annotation_key].replace(
+                    self.TMP_MISSING_ANNOTATION, None
+                )
+
+            df_annotated = df_annotated[~df_annotated[annotation_key].isna()].copy()
+
+            # try converting to int now that no nan. Note this will only do so if possible
+            df_annotated[annotation_key] = df_annotated[annotation_key].astype(self.annotation_type)
+
+            df_annotated = self._filter_annotations_before_storing(df_annotated)
+            self._store_annotations_(df_annotated)
+
+            if self.is_store_missing_annotations:
+                # put back None
+                df_annotated[annotation_key] = df_annotated[annotation_key].replace(
+                    self.TMP_MISSING_ANNOTATION, None
+                )
 
         # need to merge with df_to_annotate in case you dropped duplicates
         on = list(self.primary_keys)
@@ -373,7 +404,10 @@ class BaseAnnotator(abc.ABC):
 
     def _get_all_keys_to_keep(self, current_columns: Sequence) -> list[str]:
         other_keys_to_keep = [c for c in self.other_keys_to_keep if c in current_columns]
-        all_keys_to_keep = self.all_keys + [self.annotation_key] + other_keys_to_keep
+        # HumanIF:
+        # all_keys_to_keep = self.all_keys + [self.annotation_key] + other_keys_to_keep
+        annotation_keys = [c for c in current_columns if c.startswith(self.annotation_key)]
+        all_keys_to_keep = self.all_keys + annotation_keys + other_keys_to_keep
         return all_keys_to_keep
 
     def _apply_cached_annotations(self, df_to_annotate: pd.DataFrame) -> pd.DataFrame:
@@ -677,15 +711,48 @@ class SingleAnnotator:
             # prompts and completions here will not be the same length as the dataframe due to batching
             prompts, df_to_annotate = self._make_prompts(df_to_annotate)
             # assert False
-            completions = self.fn_completions(prompts=prompts, **self.completions_kwargs, **decoding_kwargs)
+            # HumanIF: iteratively multi-turn prompting
+            # completions = self.fn_completions(prompts=prompts, **self.completions_kwargs, **decoding_kwargs)
+            logging.info("DEBUG: An example of prompt piecies")
+            logging.info(prompts[0])
+            completions = []
+            full_prompts = []
+            for i in len(prompts[0]):
+                match_string = "{" + f"judgement_{i}" + "}"
+                cur_prompts = []
+                for j, prompt in enumerate(prompts):
+                    cur_piece = prompt[i]
+                    if i == 0:
+                        full_prompts.append(cur_piece)
+                    else:
+                        assert match_string in cur_piece, [cur_piece]
+                        assert match_string not full_prompts[j], full_prompts[j]
+                        assert cur_piece.startswith('\n') and not cur_piece.endswith('\n'), [cur_piece]
+                        assert len(completion) == i, (len(completion), i)
+                        full_prompts[j] = full_prompts[j] + cur_piece.replace(match_string, completion[-1][j][completions"] )
+                    cur_prompts.append(full_prompts[j])
+                logging.info(f"DEBUG: example prompt at turn {i}:")
+                logging.info(cur_prompts[0])
+                completions.append(self.fn_completions(prompts=cur_prompts, **self.completions_kwargs, **decoding_kwargs))
+                
+            # HumanIF: iteratively multi-turn prompting
+            # for k, v in completions.items():
+            #     if k != "completions":
+            #         if self.batch_size != 1 and (len(df_to_annotate) == len(v) * self.batch_size):
+            #             v = [el for el in v for _ in range(self.batch_size)]
+            #         df_to_annotate[k] = v
+            #         if "per_example" in k:
+            #             df_to_annotate[k] = df_to_annotate[k] / self.batch_size
 
-            for k, v in completions.items():
-                if k != "completions":
-                    if self.batch_size != 1 and (len(df_to_annotate) == len(v) * self.batch_size):
-                        v = [el for el in v for _ in range(self.batch_size)]
-                    df_to_annotate[k] = v
-                    if "per_example" in k:
-                        df_to_annotate[k] = df_to_annotate[k] / self.batch_size
+            for cur_completions in completions:
+                for k, v in cur_completions.items():
+                    if k != "completions":
+                        if self.batch_size != 1 and (len(df_to_annotate) == len(v) * self.batch_size):
+                            v = [el for el in v for _ in range(self.batch_size)]
+                        df_to_annotate[k] = v
+                        if "per_example" in k:
+                            df_to_annotate[k] = df_to_annotate[k] / self.batch_size
+
 
         # the following is only needed if you want to only reapply the parsing
         if self.completion_column in df_to_annotate.columns:
@@ -695,14 +762,21 @@ class SingleAnnotator:
             df_to_annotate = main_df_to_annotate
             completions_to_parse = df_to_annotate[self.completion_column]
         else:
-            completions_to_parse = completions[self.completion_key]
+            # HumanIF: iteratively multi-turn prompting
+            # completions_to_parse = completions[self.completion_key]
+            completions_to_parse = [cur_completions[self.completion_key] for cur_completions in completions]
 
         # note: reparsing only works if you use the same completion_key
-        annotations_to_save, completions_to_save = self._parse_completions(completions=completions_to_parse)
-        df_to_annotate[self.annotation_column] = annotations_to_save
-        if self.completion_column is not None:
-            df_to_annotate[self.completion_column] = completions_to_save
-
+        # HumanIF: iteratively multi-turn prompting
+        # annotations_to_save, completions_to_save = self._parse_completions(completions=completions_to_parse)
+        # df_to_annotate[self.annotation_column] = annotations_to_save
+        # if self.completion_column is not None:
+        #     df_to_annotate[self.completion_column] = completions_to_save
+        for i in range(len(completions))
+            annotations_to_save, completions_to_save = self._parse_completions(completions=completions_to_parse[i])
+            df_to_annotate[f"{self.annotation_column}_{i+1}"] = annotations_to_save
+            if self.completion_column is not None:
+                df_to_annotate[f"{self.completion_column}_{i+1}"] = completions_to_save
         df_annotated = self._postprocess(df_to_annotate)
 
         return df_annotated
@@ -727,7 +801,7 @@ class SingleAnnotator:
 
     def _make_prompts(
         self, df_to_annotate: pd.DataFrame, prompt_template: Optional[str] = None
-    ) -> tuple[list[str], pd.DataFrame]:
+    ) -> tuple[list[list[str]], pd.DataFrame]:
         """Make all the prompts for the given examples.
 
         Parameters
@@ -788,14 +862,24 @@ class SingleAnnotator:
 
     def _postprocess(self, df_annotated: pd.DataFrame) -> pd.DataFrame:
         """Postprocess the annotated examples."""
+        # HumanIF: iteratively multi-turn prompting
+        # arr_is_na = df_annotated[self.annotation_column].isna()
+        # if arr_is_na.any():
+        #     logging.warning(
+        #         f"{arr_is_na.sum().item()} samples had no auto annotation. We are filtering them for now. "
+        #         f"If you are using chain of thought it might be that max_tokens limit is too low. "
+        #     )
+        #     df_annotated = df_annotated[~arr_is_na]
 
-        arr_is_na = df_annotated[self.annotation_column].isna()
-        if arr_is_na.any():
-            logging.warning(
-                f"{arr_is_na.sum().item()} samples had no auto annotation. We are filtering them for now. "
-                f"If you are using chain of thought it might be that max_tokens limit is too low. "
-            )
-            df_annotated = df_annotated[~arr_is_na]
+        annotation_columns = [c for c in df_annotated.columns if c.startswith(self.annotation_column)]
+        for annotation_column in annotation_columns:
+            arr_is_na = df_annotated[annotation_column].isna()
+            if arr_is_na.any():
+                logging.warning(
+                    f"{arr_is_na.sum().item()} samples had no auto annotation. We are filtering them for now. "
+                    f"If you are using chain of thought it might be that max_tokens limit is too low. "
+                )
+                df_annotated = df_annotated[~arr_is_na]
 
         for processor in self.processors[::-1]:  # postprocess in reverted order => no interactions between processors
             df_annotated = processor.postprocess(df_annotated)

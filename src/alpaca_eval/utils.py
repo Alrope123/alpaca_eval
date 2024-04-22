@@ -96,7 +96,7 @@ def make_prompts(
     df: pd.DataFrame,
     template: str,
     batch_size: int = 1,
-) -> tuple[list[str], pd.DataFrame]:
+) -> tuple[list[list[str]], pd.DataFrame]:
     r"""Helper function to make batch prompts for a single template.
 
     Parameters
@@ -151,7 +151,11 @@ def make_prompts(
             for to_format in n_occurrences.keys():
                 # replace only first occurrence (that's why we don't use .format)
                 current_prompt = current_prompt.replace("{" + to_format + "}", str(df_out.iloc[i + j][to_format]), 1)
-        prompts.append(current_prompt)
+        
+        # HumanIF: break prompts into multiple piecies
+        # prompts.append(cur_prompt)
+        current_prompt_pieces = current_prompt.split("\n<|im_break|>")
+        prompts.append(current_prompt_pieces)
 
     return prompts, df_out
 
