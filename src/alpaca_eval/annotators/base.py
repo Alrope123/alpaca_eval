@@ -726,10 +726,10 @@ class SingleAnnotator:
                         full_prompts.append(cur_piece)
                     else:
                         assert match_string in cur_piece, [cur_piece]
-                        assert match_string not full_prompts[j], full_prompts[j]
+                        assert match_string not in full_prompts[j], full_prompts[j]
                         assert cur_piece.startswith('\n') and not cur_piece.endswith('\n'), [cur_piece]
                         assert len(completion) == i, (len(completion), i)
-                        full_prompts[j] = full_prompts[j] + cur_piece.replace(match_string, completion[-1][j][completions"] )
+                        full_prompts[j] = full_prompts[j] + cur_piece.replace(match_string, completions[-1][j]["completions"])
                     cur_prompts.append(full_prompts[j])
                 logging.info(f"DEBUG: example prompt at turn {i}:")
                 logging.info(cur_prompts[0])
@@ -772,7 +772,7 @@ class SingleAnnotator:
         # df_to_annotate[self.annotation_column] = annotations_to_save
         # if self.completion_column is not None:
         #     df_to_annotate[self.completion_column] = completions_to_save
-        for i in range(len(completions))
+        for i in range(len(completions)):
             annotations_to_save, completions_to_save = self._parse_completions(completions=completions_to_parse[i])
             df_to_annotate[f"{self.annotation_column}_{i+1}"] = annotations_to_save
             if self.completion_column is not None:
