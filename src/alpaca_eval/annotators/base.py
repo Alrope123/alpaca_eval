@@ -289,8 +289,8 @@ class BaseAnnotator(abc.ABC):
             # if self.annotation_key in df_to_annotate.columns:
             #     curr_idcs &= df_to_annotate[self.annotation_key].isna()
             annotation_keys = [c for c in df_to_annotate.columns if c.startswith(self.annotation_key)]
-            for annotation_key in annotations_keys:
-                urr_idcs &= df_to_annotate[annotation_key].isna()
+            for annotation_key in annotation_keys:
+                curr_idcs &= df_to_annotate[annotation_key].isna()
 
             # drop the output keys that you will be adding
             for k in self.other_output_keys_to_keep:
@@ -354,7 +354,7 @@ class BaseAnnotator(abc.ABC):
         #     df_annotated[self.annotation_key] = df_annotated[self.annotation_key].replace(
         #         self.TMP_MISSING_ANNOTATION, None
         #     )
-        annotation_keys = [c for c in df_to_annotate.columns if k.startswith(self.annotation_key)]
+        annotation_keys = [k for k in df_to_annotate.columns if k.startswith(self.annotation_key)]
         for annotation_key in annotation_keys:
             # select available annotations
             if self.is_store_missing_annotations:
@@ -369,10 +369,11 @@ class BaseAnnotator(abc.ABC):
             # try converting to int now that no nan. Note this will only do so if possible
             df_annotated[annotation_key] = df_annotated[annotation_key].astype(self.annotation_type)
 
-            df_annotated = self._filter_annotations_before_storing(df_annotated)
-            self._store_annotations_(df_annotated)
+        df_annotated = self._filter_annotations_before_storing(df_annotated)
+        self._store_annotations_(df_annotated)
 
-            if self.is_store_missing_annotations:
+        if self.is_store_missing_annotations:
+            for annotation_key in annotation_keys:
                 # put back None
                 df_annotated[annotation_key] = df_annotated[annotation_key].replace(
                     self.TMP_MISSING_ANNOTATION, None
@@ -429,7 +430,6 @@ class BaseAnnotator(abc.ABC):
 
     def _store_annotations_(self, df_annotated: pd.DataFrame):
         """Store annotation in memory and on disk"""
-
         if self.df_annotations is None:
             df_annotations = df_annotated
         else:
@@ -457,7 +457,9 @@ class BaseAnnotator(abc.ABC):
         )
 
         if annotation_keys is None:
-            annotation_keys = [self.annotation_key]
+            # HumanIF
+            # annotation_keys = [self.annotation_key]
+            annotation_keys = [k for k in df_partially_annotated.columns if k.startswith(self.annotation_key)]
 
         try:
             df_to_annotate = df_to_annotate.merge(
@@ -518,14 +520,13 @@ class BaseAnnotatorJSON(BaseAnnotator):
 
     def save(self, path: Optional[utils.AnyPath] = None):
         """Save all annotations to json."""
-
         path = path or self.caching_path
         if path is not None:
             logging.info(f"Saving all annotations to {path}.")
             # to make sure that we don't overwrite the annotations we load again from file (ideally would use a DB)
             self._refresh_annotations_()
-            if not self.is_store_missing_annotations:
-                self.df_annotations = self.df_annotations[~self.df_annotations[self.annotation_key].isna()]
+            # if not self.is_store_missing_annotations:
+            #     self.df_annotations = self.df_annotations[~self.df_annotations[self.annotation_key].isna()]
             self.df_annotations.to_json(path, orient="records", indent=2)
 
     def load_(self, path: Optional[utils.AnyPath] = None):
@@ -717,8 +718,8 @@ class SingleAnnotator:
             logging.info(prompts[0])
             completions = []
             full_prompts = []
-            for i in len(prompts[0]):
-                match_string = "{" + f"judgement_{i}" + "}"
+            for i in range(len(prompts[0])):
+                match_string = "<|" + f"judgement_{i}" + "|>"
                 cur_prompts = []
                 for j, prompt in enumerate(prompts):
                     cur_piece = prompt[i]
@@ -728,8 +729,8 @@ class SingleAnnotator:
                         assert match_string in cur_piece, [cur_piece]
                         assert match_string not in full_prompts[j], full_prompts[j]
                         assert cur_piece.startswith('\n') and not cur_piece.endswith('\n'), [cur_piece]
-                        assert len(completion) == i, (len(completion), i)
-                        full_prompts[j] = full_prompts[j] + cur_piece.replace(match_string, completions[-1][j]["completions"])
+                        assert len(completions) == i, (len(completions), i)
+                        full_prompts[j] = full_prompts[j] + cur_piece.replace(match_string, completions[-1]["completions"][j])
                     cur_prompts.append(full_prompts[j])
                 logging.info(f"DEBUG: example prompt at turn {i}:")
                 logging.info(cur_prompts[0])

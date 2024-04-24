@@ -155,7 +155,9 @@ def evaluate(
             if isinstance(fn_metric, str):
                 fn_metric = getattr(metrics, fn_metric)
 
-            leaderboard[name] = fn_metric(preferences=[a["preference"] if "preference" in a else a["preference_4"] for a in annotations])
+            preference_key = sorted([k for k in annotations[0].keys() if k.startswith("preference")])[-1]
+            logging.info(f"Preference key: {preference_key}")
+            leaderboard[name] = fn_metric(preferences=[a[preference_key] for a in annotations])
             leaderboard[name]["mode"] = current_leaderboard_mode
             leaderboard[name]["avg_length"] = int(model_outputs["output"].str.len().mean())
         else:
