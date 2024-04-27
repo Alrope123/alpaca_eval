@@ -642,6 +642,7 @@ class SingleAnnotator:
         processors_to_kwargs: Optional[dict[str, dict]] = None,
         is_add_default_processors: bool = True,
         completion_key: str = "completions",
+        keep_history = False,
     ):
         self.base_dir = Path(base_dir)
         self.prompt_template = self._get_prompt_template(prompt_template)
@@ -680,6 +681,7 @@ class SingleAnnotator:
             processor_kwargs["completion_column"] = self.completion_column
             Processor = self._search_processor(processor)
             self.processors += [Processor(**processor_kwargs)]
+        self.keep_history = keep_history
 
     ### Public methods ###
     def __call__(self, df_to_annotate: pd.DataFrame, **decoding_kwargs) -> pd.DataFrame:
@@ -719,6 +721,7 @@ class SingleAnnotator:
             completions = []
             full_prompts = []
             for i in range(len(prompts[0])):
+                # if self.keep_history:
                 match_string = "<|" + f"judgement_{i}" + "|>"
                 cur_prompts = []
                 for j, prompt in enumerate(prompts):
@@ -732,10 +735,16 @@ class SingleAnnotator:
                         assert len(completions) == i, (len(completions), i)
                         full_prompts[j] = full_prompts[j] + cur_piece.replace(match_string, completions[-1]["completions"][j])
                     cur_prompts.append(full_prompts[j])
+                # else:
+                #     cur_prompts = []
+                #     for prompt in prompts:
+                #         cur_piece = prompt[i]
+                #         assert "<|" + f"judgement_{i}" + "|>" not in cur_piece
+                #         cur_prompts.append(cur_piece)
                 logging.info(f"DEBUG: example prompt at turn {i}:")
                 logging.info(cur_prompts[0])
                 completions.append(self.fn_completions(prompts=cur_prompts, **self.completions_kwargs, **decoding_kwargs))
-                
+
             # HumanIF: iteratively multi-turn prompting
             # for k, v in completions.items():
             #     if k != "completions":
