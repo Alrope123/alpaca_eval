@@ -733,7 +733,7 @@ class SingleAnnotator:
                         assert match_string not in full_prompts[j], full_prompts[j]
                         assert cur_piece.startswith('\n') and not cur_piece.endswith('\n'), [cur_piece]
                         assert len(completions) == i, (len(completions), i)
-                        full_prompts[j] = full_prompts[j] + cur_piece.replace(match_string, completions[-1]["completions"][j])
+                        full_prompts[j] = full_prompts[j] + cur_piece.replace(match_string, completions[-1]["completions"][j].strip())
                     cur_prompts.append(full_prompts[j])
                 # else:
                 #     cur_prompts = []
