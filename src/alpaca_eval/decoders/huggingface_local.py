@@ -78,6 +78,8 @@ def huggingface_local_completions(
     else:
         logging.info(f"Using `huggingface_local_completions` on {n_examples} prompts using {model_name}.")
 
+    logging.info(f"Kwargs to pretraining: {model_kwargs}")
+
     if not torch.cuda.is_available():
         model_kwargs["load_in_8bit"] = False
         model_kwargs["torch_dtype"] = None
