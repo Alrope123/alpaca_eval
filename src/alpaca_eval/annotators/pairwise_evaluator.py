@@ -382,12 +382,20 @@ class SinglePairwiseAnnotator(SingleAnnotator):
 
             def _fn_replace_if_switch(df: pd.DataFrame) -> pd.DataFrame:
                 # applies to annotation_column (preference) 3-x => 2 becomes 1, 1 becomes 2 and everything in between if flaot
-                if df.empty or self.annotation_column not in df.columns:
+                # HumanIF
+                # if df.empty or self.annotation_column not in df.columns:
+                #     return df
+                # df = df.copy()
+                # df[self.annotation_column] = df[self.annotation_column].apply(lambda x: (3 - x) % 3)
+                # return df
+                annotation_columns = [c for c in df.columns if c.startswith(self.annotation_column)]
+                if df.empty or len(annotation_columns) == 0:
                     return df
                 df = df.copy()
-                df[self.annotation_column] = df[self.annotation_column].apply(lambda x: (3 - x) % 3)
+                for annotation_column in annotation_columns:
+                    df[annotation_column] = df[annotation_column].apply(lambda x: (3 - x) % 3)
                 return df
-
+                
             # swith output columns by default
             processors_to_kwargs["RandomSwitchTwoColumnsProcessor"] = dict(
                 two_columns_to_switch=["output_1", "output_2"],

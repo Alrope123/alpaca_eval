@@ -34,6 +34,7 @@ __all__ = [
     "logprob_parser",
     "pipeline_meta_parser",
     "match_parser",
+    "match_multiple_parser"
 ]
 
 
@@ -258,15 +259,60 @@ def match_parser(completion: str, matcher: dict) -> list[Any]:
     if completion == "":
         raise ValueError("The completion is empty.")
 
+    completion = completion.strip()
+    completion = completion.split("\n")[-1].split()[-1]
     if completion in ["Tie", "TIE"]:
-        completion = completion.lower().strip() 
+        completion = completion.lower() 
     elif completion in ["a", "b"]:
-        completion = completion.upper().strip()
+        completion = completion.upper()
 
     if completion not in matcher:
         logging.warning(f"The completion is not in the provided options: {completion}")
-
+    print([matcher.get(completion, completion)])
     return [matcher.get(completion, completion)]
+
+
+def match_multiple_parser(completion: str, matcher: dict) -> list[Any]:
+    """Parser that replaces part of the completion using a dictionary. This is useful if it's more natural for a
+    prompt to ask a completion that is different from the one you want to store.
+
+    Parameters
+    ----------
+    completion : str
+        Output from the model to parse.
+
+    replacer : dict
+        Dictionary with keys that are the substring of the completion that you want to replace and values that are the
+        replacements.
+
+    default_replacer : any, optional
+        If a key is not found in `replacer`, use this value instead. If "auto" then use the key itself.
+
+    Examples
+    --------
+    >>> replace_parser("True", replacer={"True": 1})
+    [1]
+    """
+    if completion == "":
+        raise ValueError("The completion is empty.")
+    
+    assert "," in completion, f"Completion does not contain comma: {completion}"
+    completion = completion.strip().split("\n")[-1]
+    completions = completion.split(",")
+    assert len(completions) == 4, f"There is no four completions, only {len(completions)}."
+    
+    new_completions = []
+    for comp in completions:
+        comp = comp.strip()
+        if comp in ["Tie", "TIE"]:
+            comp = comp.lower() 
+        elif comp in ["a", "b"]:
+            comp = comp.upper()
+
+        if comp not in matcher:
+            logging.warning(f"The completion is not in the provided options: {completion}")
+        new_completions.append(comp)
+    return [matcher.get(comp, comp) for comp in new_completions]
 
 
 def logprob_parser(

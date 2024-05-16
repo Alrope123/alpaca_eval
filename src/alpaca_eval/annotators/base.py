@@ -96,12 +96,14 @@ class BaseAnnotator(abc.ABC):
         other_input_keys_to_keep: Sequence[str] = (),
         is_store_missing_annotations: bool = True,
         base_dir: Optional[utils.AnyPath] = None,
+        multiple_answer: bool = False,
         is_raise_if_missing_primary_keys: bool = True,
         annotation_type: Optional[Type] = None,
         is_reapply_parsing: bool = False,
     ):
         logging.info(f"Creating the annotator from `{annotators_config}`.")
         self.base_dir = Path(base_dir or self.DEFAULT_BASE_DIR)
+        self.multiple_answer = multiple_answer
         self.seed = seed
         self.is_avoid_reannotations = is_avoid_reannotations
         self.primary_keys = list(primary_keys)
@@ -230,6 +232,7 @@ class BaseAnnotator(abc.ABC):
             name: self.SingleAnnotator(
                 seed=self.seed,
                 base_dir=base_dir,
+                multiple_answer=self.multiple_answer,
                 annotation_column=self.annotation_key,
                 **annotator_config,
             )
@@ -643,6 +646,7 @@ class SingleAnnotator:
         is_add_default_processors: bool = True,
         completion_key: str = "completions",
         keep_history = False,
+        multiple_answer = False,
     ):
         self.base_dir = Path(base_dir)
         self.prompt_template = self._get_prompt_template(prompt_template)
@@ -682,6 +686,7 @@ class SingleAnnotator:
             Processor = self._search_processor(processor)
             self.processors += [Processor(**processor_kwargs)]
         self.keep_history = keep_history
+        self.multiple_answer = multiple_answer
 
     ### Public methods ###
     def __call__(self, df_to_annotate: pd.DataFrame, **decoding_kwargs) -> pd.DataFrame:
@@ -744,6 +749,7 @@ class SingleAnnotator:
                 logging.info(f"DEBUG: example prompt at turn {i}:")
                 logging.info(cur_prompts[0])
                 completions.append(self.fn_completions(prompts=cur_prompts, **self.completions_kwargs, **decoding_kwargs))
+            
 
             # HumanIF: iteratively multi-turn prompting
             # for k, v in completions.items():
@@ -782,13 +788,35 @@ class SingleAnnotator:
         # df_to_annotate[self.annotation_column] = annotations_to_save
         # if self.completion_column is not None:
         #     df_to_annotate[self.completion_column] = completions_to_save
-        for i in range(len(completions)):
-            annotations_to_save, completions_to_save = self._parse_completions(completions=completions_to_parse[i])
-            df_to_annotate[f"{self.annotation_column}_{i+1}"] = annotations_to_save
+        if not self.multiple_answer:
+            if len(completions_to_parse) > 1:
+                for i in range(len(completions)):
+                    annotations_to_save, completions_to_save = self._parse_completions(completions=completions_to_parse[i])
+                    df_to_annotate[f"{self.annotation_column}_{i+1}"] = annotations_to_save
+                    if self.completion_column is not None:
+                        df_to_annotate[f"{self.completion_column}_{i+1}"] = completions_to_save
+            else:
+                annotations_to_save, completions_to_save = self._parse_completions(completions=completions_to_parse[0])
+                df_to_annotate[f"{self.annotation_column}"] = annotations_to_save
+                if self.completion_column is not None:
+                    df_to_annotate[f"{self.completion_column}"] = completions_to_save
+        else:
+            assert len(completions_to_parse) == 1
+            annotations_to_save, completions_to_save = self._parse_completions(completions=completions_to_parse[0])
+            annotation_num = 4
+            annotations_to_save_ = []
+            for a in annotations_to_save:
+                if a is None:
+                    annotations_to_save_.extend([None] * 4)
+                else:
+                    annotations_to_save_.append(a)
+            annotations_to_save = annotations_to_save_
             if self.completion_column is not None:
-                df_to_annotate[f"{self.completion_column}_{i+1}"] = completions_to_save
+                df_to_annotate[f"{self.completion_column}"] = completions_to_save
+            
+            for i in range(annotation_num):
+                df_to_annotate[f"{self.annotation_column}_{i+1}"] = [annotations_to_save[j*annotation_num+i] for j in range(len(completions_to_save))]
         df_annotated = self._postprocess(df_to_annotate)
-
         return df_annotated
 
     ######################
@@ -853,16 +881,16 @@ class SingleAnnotator:
             try:
                 batch_annotations = self.fn_completion_parser(completion)
                 batch_annotations = list(batch_annotations)
-
-                if len(batch_annotations) != self.batch_size:
-                    logging.warning(
-                        f"Found {len(batch_annotations)} annotations in:'''\n{completion}\n''' but expected"
-                        f" {self.batch_size}. We are setting all annotations to None."
-                    )
-                    batch_annotations = [None] * self.batch_size
+                # if len(batch_annotations) != self.batch_size:
+                #     logging.warning(
+                #         f"Found {len(batch_annotations)} annotations in:'''\n{completion}\n''' but expected"
+                #         f" {self.batch_size}. We are setting all annotations to None."
+                #     )
+                #     batch_annotations = [None] * self.batch_size
 
             except Exception as e:
                 logging.exception(f"Error while parsing completion: '''\n{completion}\n'''")
+                # assert False
                 batch_annotations = [None] * self.batch_size
 
             all_annotations += batch_annotations
@@ -890,10 +918,8 @@ class SingleAnnotator:
                     f"If you are using chain of thought it might be that max_tokens limit is too low. "
                 )
                 df_annotated = df_annotated[~arr_is_na]
-
         for processor in self.processors[::-1]:  # postprocess in reverted order => no interactions between processors
             df_annotated = processor.postprocess(df_annotated)
-
         return df_annotated
 
     #######################
