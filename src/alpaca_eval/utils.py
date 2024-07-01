@@ -511,8 +511,10 @@ def validate_alpacaeval_preference(x: float, is_allow_nan: bool = True) -> bool:
 
 def validate_humanif_preference(x: float, is_allow_nan: bool = True) -> bool:
     """Validate the preference annotation."""
+    if type(x) == str:
+        return True
     if not (x in [1.0, 2.0, 0.0] or (is_allow_nan and np.isnan(x))):
-        assert x
+        assert x, x
     return x in [1.0, 2.0, 0.0] or (is_allow_nan and np.isnan(x))
 
 

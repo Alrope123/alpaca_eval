@@ -266,10 +266,13 @@ def match_parser(completion: str, matcher: dict) -> list[Any]:
     elif completion in ["a", "b"]:
         completion = completion.upper()
 
+    if completion.endswith('.'):
+        completion = completion[:-1]
+
     if completion not in matcher:
         logging.warning(f"The completion is not in the provided options: {completion}")
     print([matcher.get(completion, completion)])
-    return [matcher.get(completion, completion)]
+    return [matcher.get(completion, np.nan)]
 
 
 def match_multiple_parser(completion: str, matcher: dict) -> list[Any]:
@@ -312,7 +315,7 @@ def match_multiple_parser(completion: str, matcher: dict) -> list[Any]:
         if comp not in matcher:
             logging.warning(f"The completion is not in the provided options: {completion}")
         new_completions.append(comp)
-    return [matcher.get(comp, comp) for comp in new_completions]
+    return [matcher.get(comp, np.nan) for comp in new_completions]
 
 
 def logprob_parser(

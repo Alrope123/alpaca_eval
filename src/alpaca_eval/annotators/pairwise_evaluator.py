@@ -158,7 +158,7 @@ class PairwiseAnnotatorLocal(BaseAnnotator):
         outputs_2: Union[Sequence[dict[str, Any]], pd.DataFrame],
         outputs_3: Union[Sequence[dict[str, Any]], pd.DataFrame] = None,
         keys_to_merge: Optional[Sequence[str]] = None,
-        is_ordered: bool = False,
+        is_ordered: bool = True,
         **decoding_kwargs,
     ) -> list[dict[str, Any]]:
         """Head-to-head comparison between two sequence of outputs.
@@ -393,7 +393,7 @@ class SinglePairwiseAnnotator(SingleAnnotator):
                     return df
                 df = df.copy()
                 for annotation_column in annotation_columns:
-                    df[annotation_column] = df[annotation_column].apply(lambda x: (3 - x) % 3)
+                    df[annotation_column] = df[annotation_column].apply(lambda x: (3 - x) % 3 if type(x) == float else -1)
                 return df
                 
             # swith output columns by default
