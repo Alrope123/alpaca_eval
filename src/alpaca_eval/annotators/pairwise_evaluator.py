@@ -192,6 +192,7 @@ class PairwiseAnnotatorLocal(BaseAnnotator):
             `"preference"`. Preference will be 1.5 if output_1 == output_2, 1 if output_1 is preferred, and 2 if output_2
             is preferred.
         """
+        logging.info(f"Length before merging: {len(outputs_1)}")
         if keys_to_merge is None:
             keys_to_merge = self.input_keys
 
@@ -262,6 +263,7 @@ class PairwiseAnnotatorLocal(BaseAnnotator):
                     f"{len(outputs_1)}, len(outputs_2)=={len(outputs_2)}, and len(df_annotated)=={len(df_to_annotate)}."
                     f" This means that there are missing examples or duplicates. We are taking a SQL inner join."
                 )
+        logging.info(f"Length after merging: {len(outputs_1)}")
         out = self.__call__(df_to_annotate, **decoding_kwargs)
 
         return out

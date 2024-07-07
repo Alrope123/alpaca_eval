@@ -707,7 +707,7 @@ class SingleAnnotator:
             return df_to_annotate
 
         df_to_annotate = self._preprocess(df_to_annotate)
-
+        logging.info(f"Length after preprocess: {len(df_annotated)}")
         # the following only reapplies the parsing in case you already stored the raw completions. requires batch_size=1
         if self.completion_column in df_to_annotate.columns and self.batch_size == 1:
             # keep only the rows that have not been annotated yet
