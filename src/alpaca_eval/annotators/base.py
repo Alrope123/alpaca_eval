@@ -288,7 +288,7 @@ class BaseAnnotator(abc.ABC):
         for annotator in self.annotators.keys():
             # only annotate examples that have not been annotated yet
             curr_idcs = df_to_annotate[self.annotator_column] == annotator
-            print(f"Length of curr_idcs before: {len(curr_idcs)}")
+            print(f"Length of curr_idcs before: {len(sum(curr_idcs))}")
             # HumanIF: 
             # if self.annotation_key in df_to_annotate.columns:
             #     curr_idcs &= df_to_annotate[self.annotation_key].isna()
@@ -296,7 +296,7 @@ class BaseAnnotator(abc.ABC):
             for annotation_key in annotation_keys:
                 curr_idcs &= df_to_annotate[annotation_key].isna()
             print(f"Annotation keys: {annotation_keys}")
-            print(f"Length of curr_idcs after: {len(curr_idcs)}")
+            print(f"Length of curr_idcs after: {len(sum(curr_idcs))}")
 
 
             # drop the output keys that you will be adding
