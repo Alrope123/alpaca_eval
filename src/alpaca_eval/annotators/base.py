@@ -283,17 +283,21 @@ class BaseAnnotator(abc.ABC):
 
     def _annotate(self, df_to_annotate: pd.DataFrame, **decoding_kwargs) -> pd.DataFrame:
         """Annotate the examples."""
-
+        print(f"Length before annotate: {len(df_to_annotate)}")
         df_annotated = df_to_annotate.copy()
         for annotator in self.annotators.keys():
             # only annotate examples that have not been annotated yet
             curr_idcs = df_to_annotate[self.annotator_column] == annotator
+            print(f"Length of curr_idcs before: {len(curr_idcs)}")
             # HumanIF: 
             # if self.annotation_key in df_to_annotate.columns:
             #     curr_idcs &= df_to_annotate[self.annotation_key].isna()
             annotation_keys = [c for c in df_to_annotate.columns if c.startswith(self.annotation_key)]
             for annotation_key in annotation_keys:
                 curr_idcs &= df_to_annotate[annotation_key].isna()
+            print(f"Annotation keys: {annotation_keys}")
+            print(f"Length of curr_idcs after: {len(curr_idcs)}")
+
 
             # drop the output keys that you will be adding
             for k in self.other_output_keys_to_keep:
