@@ -180,7 +180,6 @@ class BaseAnnotator(abc.ABC):
 
         # note: not ideal potentially doing a lot of dataframe copies. But given that they should be small, ~ok
         df_to_annotate = utils.convert_to_dataframe(to_annotate)
-        logging.info(f"Length after to dataframe: {len(to_annotate)}")
         # make sure primary keys are strings
         # you need to remember what was converted to string to convert it back => loop through all
         # the values, and if they are not strings, then store the inverse mapping
@@ -250,7 +249,6 @@ class BaseAnnotator(abc.ABC):
 
     def _preprocess(self, to_annotate: utils.AnyData) -> pd.DataFrame:
         """Preprocess the examples to annotate. In particular takes care of filtering unnecessary examples."""
-        logging.info(f"Length before outer process: {len(to_annotate)}")
         df_to_annotate = utils.convert_to_dataframe(to_annotate)
         self._add_missing_primary_keys_(df_to_annotate)
 
@@ -265,7 +263,6 @@ class BaseAnnotator(abc.ABC):
 
         # remove duplicates because you only need to annotate one of them
         df_to_annotate = df_to_annotate.drop_duplicates(subset=self.primary_keys)
-        logging.info(f"Length after drop_duplicate: {len(df_to_annotate)}, {self.primary_keys}")
         # set the annotater for each example
         df_to_annotate[self.annotator_column] = df_to_annotate.apply(
             lambda x: utils.random_seeded_choice(
@@ -278,26 +275,20 @@ class BaseAnnotator(abc.ABC):
 
         if self.is_avoid_reannotations:
             df_to_annotate = self._apply_cached_annotations(df_to_annotate)
-        logging.info(f"Length after outer process: {len(df_to_annotate)}")
         return df_to_annotate
 
     def _annotate(self, df_to_annotate: pd.DataFrame, **decoding_kwargs) -> pd.DataFrame:
         """Annotate the examples."""
-        print(f"Length before annotate: {len(df_to_annotate)}")
         df_annotated = df_to_annotate.copy()
         for annotator in self.annotators.keys():
             # only annotate examples that have not been annotated yet
             curr_idcs = df_to_annotate[self.annotator_column] == annotator
-            print(f"Length of curr_idcs before: {sum(curr_idcs)}")
             # HumanIF: 
             # if self.annotation_key in df_to_annotate.columns:
             #     curr_idcs &= df_to_annotate[self.annotation_key].isna()
             annotation_keys = [c for c in df_to_annotate.columns if c.startswith(self.annotation_key)]
             # for annotation_key in annotation_keys:
             #     curr_idcs &= df_to_annotate[annotation_key].isna()
-            print(f"Annotation keys: {annotation_keys}")
-            print(f"Length of curr_idcs after: {sum(curr_idcs)}")
-
 
             # drop the output keys that you will be adding
             for k in self.other_output_keys_to_keep:
@@ -710,9 +701,8 @@ class SingleAnnotator:
             df_to_annotate[self.annotation_column] = []
             return df_to_annotate
 
-        logging.info(f"Length before preprocess: {len(df_to_annotate)}")
         df_to_annotate = self._preprocess(df_to_annotate)
-        logging.info(f"Length after preprocess: {len(df_to_annotate)}")
+
         # the following only reapplies the parsing in case you already stored the raw completions. requires batch_size=1
         if self.completion_column in df_to_annotate.columns and self.batch_size == 1:
             # keep only the rows that have not been annotated yet
