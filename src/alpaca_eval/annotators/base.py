@@ -180,7 +180,7 @@ class BaseAnnotator(abc.ABC):
 
         # note: not ideal potentially doing a lot of dataframe copies. But given that they should be small, ~ok
         df_to_annotate = utils.convert_to_dataframe(to_annotate)
-
+        logging.info(f"Length after to dataframe: {len(to_annotate)}")
         # make sure primary keys are strings
         # you need to remember what was converted to string to convert it back => loop through all
         # the values, and if they are not strings, then store the inverse mapping
@@ -250,7 +250,7 @@ class BaseAnnotator(abc.ABC):
 
     def _preprocess(self, to_annotate: utils.AnyData) -> pd.DataFrame:
         """Preprocess the examples to annotate. In particular takes care of filtering unnecessary examples."""
-
+        logging.info(f"Length before outer process: {len(to_annotate)}")
         df_to_annotate = utils.convert_to_dataframe(to_annotate)
         self._add_missing_primary_keys_(df_to_annotate)
 
@@ -265,7 +265,7 @@ class BaseAnnotator(abc.ABC):
 
         # remove duplicates because you only need to annotate one of them
         df_to_annotate = df_to_annotate.drop_duplicates(subset=self.primary_keys)
-
+        logging.info(f"Length after drop_duplicate: {len(df_to_annotate)}, {self.primary_keys}")
         # set the annotater for each example
         df_to_annotate[self.annotator_column] = df_to_annotate.apply(
             lambda x: utils.random_seeded_choice(
@@ -278,7 +278,7 @@ class BaseAnnotator(abc.ABC):
 
         if self.is_avoid_reannotations:
             df_to_annotate = self._apply_cached_annotations(df_to_annotate)
-
+        logging.info(f"Length after outer process: {len(df_to_annotate)}")
         return df_to_annotate
 
     def _annotate(self, df_to_annotate: pd.DataFrame, **decoding_kwargs) -> pd.DataFrame:
