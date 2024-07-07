@@ -293,8 +293,8 @@ class BaseAnnotator(abc.ABC):
             # if self.annotation_key in df_to_annotate.columns:
             #     curr_idcs &= df_to_annotate[self.annotation_key].isna()
             annotation_keys = [c for c in df_to_annotate.columns if c.startswith(self.annotation_key)]
-            for annotation_key in annotation_keys:
-                curr_idcs &= df_to_annotate[annotation_key].isna()
+            # for annotation_key in annotation_keys:
+            #     curr_idcs &= df_to_annotate[annotation_key].isna()
             print(f"Annotation keys: {annotation_keys}")
             print(f"Length of curr_idcs after: {sum(curr_idcs)}")
 
