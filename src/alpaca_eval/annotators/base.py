@@ -262,7 +262,7 @@ class BaseAnnotator(abc.ABC):
                 df_to_annotate[c] = None
 
         # remove duplicates because you only need to annotate one of them
-        df_to_annotate = df_to_annotate.drop_duplicates(subset=self.primary_keys)
+        # df_to_annotate = df_to_annotate.drop_duplicates(subset=self.primary_keys)
         # set the annotater for each example
         df_to_annotate[self.annotator_column] = df_to_annotate.apply(
             lambda x: utils.random_seeded_choice(
