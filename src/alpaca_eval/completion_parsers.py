@@ -152,6 +152,7 @@ def ranking_parser(completion: str, model_1_name: str = "model_1") -> list[Any]:
 
         rank = [c for c in ordered_completions if c["model"] == model_1_name][0]["rank"]
         assert rank in [1, 2]
+        return rank
     except Exception as e:
         logging.error(f"{e}\nContent: {completion}\n" "You must manually fix the score pair.")
         return [np.nan]
