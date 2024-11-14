@@ -144,19 +144,17 @@ def ranking_parser(completion: str, model_1_name: str = "model_1") -> list[Any]:
     if completion == "":
         raise ValueError("The completion is empty.")
 
-    # try:
-    if isinstance(completion, str):
-        ordered_completions = ast.literal_eval(completion)
-    else:
-        ordered_completions = completion
+    try:
+        if isinstance(completion, str):
+            ordered_completions = ast.literal_eval(completion)
+        else:
+            ordered_completions = completion
 
-    rank = [c for c in ordered_completions if c["model"] == model_1_name][0]["rank"]
-    assert rank in [1, 2]
-    assert False, [f"Content: {completion}\n", f"Rank: {rank}"]
-    return [rank]
-    # except Exception as e:
-    #     # logging.error(f"{e}\nContent: {completion}\n" "You must manually fix the score pair.")
-    #     return [np.nan]
+        rank = [c for c in ordered_completions if c["model"] == model_1_name][0]["rank"]
+        assert rank in [1, 2]
+    except Exception as e:
+        logging.error(f"{e}\nContent: {completion}\n" "You must manually fix the score pair.")
+        return [np.nan]
 
 
 def json_parser(completion: str, annotation_key: Optional[str]) -> list[Any]:
