@@ -393,7 +393,7 @@ class SinglePairwiseAnnotator(SingleAnnotator):
                     return df
                 df = df.copy()
                 for annotation_column in annotation_columns:
-                    df[annotation_column] = df[annotation_column].apply(lambda x: (3 - x) % 3 if type(x) == float else -1)
+                    df[annotation_column] = df[annotation_column].apply(lambda x: (3 - x) % 3 if type(x) == float or type(x) == int else -1)
                 return df
                 
             # swith output columns by default
