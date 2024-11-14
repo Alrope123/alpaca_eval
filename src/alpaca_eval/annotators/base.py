@@ -917,6 +917,7 @@ class SingleAnnotator:
                 df_annotated = df_annotated[~arr_is_na]
         for processor in self.processors[::-1]:  # postprocess in reverted order => no interactions between processors
             df_annotated = processor.postprocess(df_annotated)
+        print(df_annotated.head())
         return df_annotated
 
     #######################
