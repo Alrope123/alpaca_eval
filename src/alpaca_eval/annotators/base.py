@@ -905,6 +905,8 @@ class SingleAnnotator:
         #     df_annotated = df_annotated[~arr_is_na]
 
         annotation_columns = [c for c in df_annotated.columns if c.startswith(self.annotation_column)]
+        print(f"annotation_columns: {annotation_columns}")
+        print(df_annotated.head())
         for annotation_column in annotation_columns:
             arr_is_na = df_annotated[annotation_column].isna()
             if arr_is_na.any():
