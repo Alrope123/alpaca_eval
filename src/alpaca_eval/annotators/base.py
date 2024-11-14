@@ -875,7 +875,7 @@ class SingleAnnotator:
         for completion in completions:
             try:
                 batch_annotations = self.fn_completion_parser(completion)
-                batch_annotations = list(batch_annotations)
+                batch_annotations = [batch_annotations]
                 # if len(batch_annotations) != self.batch_size:
                 #     logging.warning(
                 #         f"Found {len(batch_annotations)} annotations in:'''\n{completion}\n''' but expected"
