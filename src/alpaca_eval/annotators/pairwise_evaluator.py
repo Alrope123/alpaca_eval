@@ -420,7 +420,6 @@ class SinglePairwiseAnnotator(SingleAnnotator):
         for annotation_column in annotation_columns:
             all_values = df_annotated[annotation_column]
             all_values = all_values[~all_values.isna()]
-            print([all_values])
             assert all_values.apply(utils.validate_humanif_preference, is_allow_nan=True).all() or \
                 all_values.apply(utils.validate_alpacaeval_preference, is_allow_nan=True).all(), [all_values[:5]]
 
