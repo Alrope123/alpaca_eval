@@ -128,6 +128,9 @@ def huggingface_local_completions(
         batch_size=batch_size,
     )
     default_kwargs.update(kwargs)
+    if not do_sample:
+        for key in ["temperature", "top_p", "top_k"]:
+            default_kwargs.pop(key, None)
     logging.info(f"Kwargs to completion: {default_kwargs}")
     pipeline = transformers.pipeline(
         task="text-generation",
