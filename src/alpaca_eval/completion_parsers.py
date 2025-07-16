@@ -258,19 +258,19 @@ def match_parser(completion: str, matcher: dict) -> list[Any]:
     if completion == "":
         raise ValueError("The completion is empty.")
 
-    completion = completion.strip()
-    completion = completion.split("\n")[-1].split()[-1]
-    if completion in ["Tie", "TIE"]:
-        completion = completion.lower() 
-    elif completion in ["a", "b"]:
-        completion = completion.upper()
+    completion_ = completion.strip()
+    completion_ = completion_.split("\n")[-1].split()[-1]
+    if completion_ in ["Tie", "TIE"]:
+        completion_ = completion_.lower() 
+    elif completion_ in ["a", "b"]:
+        completion_ = completion_.upper()
 
-    if completion.endswith('.'):
-        completion = completion[:-1]
+    if completion_.endswith('.'):
+        completion_ = completion_[:-1]
 
-    if completion not in matcher:
+    if completion_ not in matcher:
         logging.warning(f"The completion is not in the provided options: {completion}")
-    return [matcher.get(completion, np.nan)]
+    return [matcher.get(completion_, np.nan)]
 
 
 def match_multiple_parser(completion: str, matcher: dict) -> list[Any]:
