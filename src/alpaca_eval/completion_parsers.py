@@ -34,6 +34,7 @@ __all__ = [
     "logprob_parser",
     "pipeline_meta_parser",
     "match_parser",
+    "match_parser_qwen"
     "match_multiple_parser"
 ]
 
