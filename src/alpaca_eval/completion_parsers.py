@@ -35,7 +35,8 @@ __all__ = [
     "pipeline_meta_parser",
     "match_parser",
     "match_parser_qwen",
-    "match_multiple_parser"
+    "match_multiple_parser",
+    "match_parser_qwen_reasoning"
 ]
 
 
@@ -299,6 +300,45 @@ def match_parser_qwen(completion: str, matcher: dict) -> list[Any]:
         raise ValueError("The completion is empty.")
 
     completion_ = completion.strip()
+    completion_ = completion_.split("\n")[0].split()[0]
+    if completion_ in ["Tie", "TIE"]:
+        completion_ = completion_.lower() 
+    elif completion_ in ["a", "b"]:
+        completion_ = completion_.upper()
+
+    if completion_.endswith('.'):
+        completion_ = completion_[:-1]
+
+    if completion_ not in matcher:
+        logging.warning(f"The completion is not in the provided options: {completion}\nParsed {completion_}")
+    return [matcher.get(completion_, np.nan)]
+
+def match_parser_qwen_reasoning(completion: str, matcher: dict) -> list[Any]:
+    """Parser that replaces part of the completion using a dictionary. This is useful if it's more natural for a
+    prompt to ask a completion that is different from the one you want to store.
+
+    Parameters
+    ----------
+    completion : str
+        Output from the model to parse.
+
+    replacer : dict
+        Dictionary with keys that are the substring of the completion that you want to replace and values that are the
+        replacements.
+
+    default_replacer : any, optional
+        If a key is not found in `replacer`, use this value instead. If "auto" then use the key itself.
+
+    Examples
+    --------
+    >>> replace_parser("True", replacer={"True": 1})
+    [1]
+    """
+    if completion == "":
+        raise ValueError("The completion is empty.")
+
+    completion_ = completion.strip()
+    completion_ = completion_.split("</think>")[-1].strip()
     completion_ = completion_.split("\n")[0].split()[0]
     if completion_ in ["Tie", "TIE"]:
         completion_ = completion_.lower() 
