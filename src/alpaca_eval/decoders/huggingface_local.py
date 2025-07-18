@@ -94,7 +94,16 @@ def huggingface_local_completions(
         use_fast=is_fast_tokenizer,
         **model_kwargs,
     )
-    model = AutoModelForCausalLM.from_pretrained(model_name, cache_dir=cache_dir, **model_kwargs).eval()
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name, 
+        cache_dir=cache_dir,
+        max_memory={
+            0: "80GiB",  # Adjust based on your GPU's VRAM
+            1: "80GiB",
+            2: "80GiB",
+            3: "80GiB"
+        },
+        **model_kwargs).eval()
 
     if adapters_name:
         logging.info(f"Merging adapter from {adapters_name}.")
