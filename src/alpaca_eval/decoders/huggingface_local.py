@@ -98,10 +98,10 @@ def huggingface_local_completions(
         model_name, 
         cache_dir=cache_dir,
         max_memory={
-            0: "80GiB",  # Adjust based on your GPU's VRAM
-            1: "80GiB",
-            2: "80GiB",
-            3: "80GiB"
+            0: "70GiB",  # Adjust based on your GPU's VRAM
+            1: "70GiB",
+            2: "70GiB",
+            3: "70GiB"
         },
         **model_kwargs).eval()
 
