@@ -154,7 +154,7 @@ class BaseAnnotator(abc.ABC):
     def __call__(
         self,
         to_annotate: utils.AnyData,
-        chunksize: Optional[int] = 4000,
+        chunksize: Optional[int] = 5000,
         **decoding_kwargs,
     ) -> list[dict[str, Any]]:
         """Main function for annotating.
