@@ -830,7 +830,7 @@ class SingleAnnotator:
             return name
 
     def _get_prompt_template(self, prompt_template: utils.AnyPath):
-        return utils.read_or_return(self.base_dir / prompt_template)
+        return utils.read_or_return(self.base_dir / prompt_template, encoding='utf-8')
 
     def _make_prompts(
         self, df_to_annotate: pd.DataFrame, prompt_template: Optional[str] = None
